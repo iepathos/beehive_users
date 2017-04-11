@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
+
+	log "github.com/Sirupsen/logrus"
+
+	"github.com/gorilla/mux"
 
 	r "gopkg.in/gorethink/gorethink.v3"
 )
@@ -20,7 +23,7 @@ var TableName = "users"
 
 // user model
 type User struct {
-	Id       int    `json:"id"`
+	Id       string `json:"id"`
 	Username string `json:"username"`
 	Wins     int    `json:"wins"`
 }
@@ -52,10 +55,13 @@ func InsertUser(user User) {
 func CreateUser(w http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(io.LimitReader(req.Body, 1048576))
 	if err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
+
 	if err := req.Body.Close(); err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	var user User
@@ -70,21 +76,62 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// get
+func GetUser(w http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	username := vars["username"]
+	username = "Saitama"
+	log.Println(username)
+	var user User
+	// connect to db
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	db := r.DB(DbName)
+
+	res, err := db.Table(TableName).Filter(r.Row.Field("username").Eq(username)).Run(session)
+	if err != nil {
+		log.Fatalln(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = res.One(&user)
+	if err != nil {
+		log.Fatalln(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
 // list
 
-// get
-func GetUser(w http.ResponseWriter, req *http.Request) {
-
-}
-
 // login
 // logout
 
 func main() {
-	http.HandleFunc("/create", CreateUser)
-	log.Fatal(http.ListenAndServe(":8082", nil))
+	router := mux.NewRouter()
+
+	router.HandleFunc("/create", CreateUser)
+	router.HandleFunc("/user/{username}", GetUser)
+	server := &http.Server{
+		Addr:    "localhost:3000",
+		Handler: router,
+	}
+	log.Fatal(server.ListenAndServe())
 }

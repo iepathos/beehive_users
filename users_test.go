@@ -3,17 +3,20 @@ package main
 
 import (
 	"bytes"
-	"log"
+	"encoding/json"
+	// "encoding/json"
+	// "fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	log "github.com/Sirupsen/logrus"
 
 	simplejson "github.com/bitly/go-simplejson"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
 func createDatabase(databaseName string) {
-	// connect to rethinkdb
 	session, err := r.Connect(r.ConnectOpts{
 		Address: "localhost:28015",
 	})
@@ -29,7 +32,6 @@ func createDatabase(databaseName string) {
 }
 
 func createTable(tableName string) {
-	// connect to rethinkdb
 	session, err := r.Connect(r.ConnectOpts{
 		Address: "localhost:28015",
 	})
@@ -46,7 +48,6 @@ func createTable(tableName string) {
 }
 
 func dropDatabase(databaseName string) {
-	// connect to rethinkdb
 	session, err := r.Connect(r.ConnectOpts{
 		Address: "localhost:28015",
 	})
@@ -128,5 +129,54 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUser(t *testing.T) {
+	createDatabase("test")
+	createTable(TableName)
 
+	jsonStr := []byte(`{"username":"Saitama"}`)
+	var user User
+	err := json.Unmarshal(jsonStr, &user)
+	if err != nil {
+		t.Fatal(err)
+	}
+	InsertUser(user)
+
+	url := "/user/Saitama"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(GetUser)
+
+	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
+	// directly and pass in our Request and ResponseRecorder.
+	handler.ServeHTTP(rr, req)
+
+	// Check the status code is what we expect.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("CreateUser handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	// Check the response body is what we expect.
+	reqJSON, err := simplejson.NewFromReader(rr.Body)
+	if err != nil {
+		t.Errorf("Error while reading request JSON: %s", err)
+	}
+	username := reqJSON.Get("username").MustString()
+	if username != "Saitama" {
+		t.Errorf("Expected request JSON response to have username Saitama")
+	}
+	wins := reqJSON.Get("wins").MustInt()
+	if wins != 0 {
+		t.Errorf("Expected request JSON response to have wins 0")
+	}
+	id := reqJSON.Get("id").MustInt()
+	if id != 0 {
+		t.Errorf("Expected request JSON response to have id 0 got %v", id)
+	}
+
+	dropDatabase("test")
 }
