@@ -20,6 +20,7 @@ var TableName = "users"
 
 // user model
 type User struct {
+	Id       int    `json:"id"`
 	Username string `json:"username"`
 	Wins     int    `json:"wins"`
 }
@@ -76,6 +77,9 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 // list
 
 // get
+func GetUser(w http.ResponseWriter, req *http.Request) {
+
+}
 
 // login
 // logout
