@@ -14,53 +14,9 @@ import (
 
 	simplejson "github.com/bitly/go-simplejson"
 	r "gopkg.in/gorethink/gorethink.v3"
+
+	"github.com/iepathos/beehive/rego"
 )
-
-func createDatabase(databaseName string) {
-	session, err := r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	log.Println("Creating database", databaseName)
-	_, err = r.DBCreate(databaseName).Run(session)
-	if err != nil {
-		log.Println(err.Error())
-	}
-}
-
-func createTable(tableName string) {
-	session, err := r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	db := r.DB("test")
-
-	log.Println("Creating table", tableName)
-	if _, err := db.TableCreate(tableName).RunWrite(session); err != nil {
-		log.Println(err)
-	}
-}
-
-func dropDatabase(databaseName string) {
-	session, err := r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-
-	log.Println("Dropping database", databaseName)
-	_, err = r.DBDrop(databaseName).Run(session)
-	if err != nil {
-		log.Println(err.Error())
-	}
-}
 
 func TestCreateUser(t *testing.T) {
 	// lookup user in rethinkdb and make sure it now exists
@@ -70,8 +26,8 @@ func TestCreateUser(t *testing.T) {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	createDatabase("test")
-	createTable(TableName)
+	rego.CreateDatabase("test")
+	rego.CreateTable(TableName)
 
 	url := "/create"
 	jsonStr := []byte(`{"username":"Saitama"}`)
@@ -121,12 +77,12 @@ func TestCreateUser(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Expected RethinkDB users table to have count of 1")
 	}
-	dropDatabase("test")
+	rego.DropDatabase("test")
 }
 
 func TestGetUser(t *testing.T) {
-	createDatabase("test")
-	createTable(TableName)
+	rego.CreateDatabase("test")
+	rego.CreateTable(TableName)
 
 	jsonStr := []byte(`{"username":"Saitama"}`)
 	var user User
@@ -170,5 +126,5 @@ func TestGetUser(t *testing.T) {
 		t.Errorf("Expected request JSON response to have wins 0")
 	}
 
-	dropDatabase("test")
+	rego.DropDatabase("test")
 }
