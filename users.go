@@ -86,7 +86,6 @@ func GetUser(w http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
 	username = "Saitama"
-	log.Println(username)
 	var user User
 	// connect to db
 	session, err := r.Connect(r.ConnectOpts{

@@ -4,8 +4,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	// "encoding/json"
-	// "fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
