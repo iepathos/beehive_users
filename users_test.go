@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	simplejson "github.com/bitly/go-simplejson"
@@ -38,7 +37,7 @@ func createTable(tableName string) {
 		log.Fatalln(err.Error())
 	}
 
-	db := r.DB(os.Getenv("DBNAME"))
+	db := r.DB("test")
 
 	log.Println("Creating table", tableName)
 	if _, err := db.TableCreate(tableName).RunWrite(session); err != nil {
