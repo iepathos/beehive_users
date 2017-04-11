@@ -7,12 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
 // database name
-var DbName = "test"
+var DbName = os.Getenv("DBNAME")
 
 // table name for users service
 var TableName = "users"
