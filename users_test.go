@@ -1,4 +1,4 @@
-// handlers_test.go
+// users_test.go
 package main
 
 import (
