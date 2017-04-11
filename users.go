@@ -12,7 +12,7 @@ import (
 )
 
 // database name
-var DbName = "beehive"
+var DbName = "test"
 
 // table name for users service
 var TableName = "users"

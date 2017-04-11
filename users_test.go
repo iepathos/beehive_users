@@ -3,16 +3,75 @@ package main
 
 import (
 	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	simplejson "github.com/bitly/go-simplejson"
+	r "gopkg.in/gorethink/gorethink.v3"
 )
 
+func createDatabase(databaseName string) {
+	// connect to rethinkdb
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	log.Println("Creating database", databaseName)
+	_, err = r.DBCreate(databaseName).Run(session)
+	if err != nil {
+		log.Println(err.Error())
+	}
+}
+
+func createTable(tableName string) {
+	// connect to rethinkdb
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	db := r.DB(DbName)
+
+	log.Println("Creating table", tableName)
+	if _, err := db.TableCreate(tableName).RunWrite(session); err != nil {
+		log.Println(err)
+	}
+}
+
+func dropDatabase(databaseName string) {
+	// connect to rethinkdb
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	log.Println("Dropping database", databaseName)
+	_, err = r.DBDrop(databaseName).Run(session)
+	if err != nil {
+		log.Println(err.Error())
+	}
+}
+
 func TestCreateUser(t *testing.T) {
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
+	// lookup user in rethinkdb and make sure it now exists
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	createDatabase("test")
+	createTable(TableName)
+
 	url := "/create"
 	jsonStr := []byte(`{"username":"Saitama"}`)
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
@@ -50,5 +109,16 @@ func TestCreateUser(t *testing.T) {
 		t.Errorf("Expected request JSON response to have wins 0")
 	}
 
-	// lookup user in rethinkdb and make sure it now exists
+	db := r.DB("test")
+	cursor, err := db.Table(TableName).Count().Run(session)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	var count int
+	cursor.One(&count)
+	cursor.Close()
+	if count != 1 {
+		t.Errorf("Expected RethinkDB users table to have count of 1")
+	}
+	dropDatabase("test")
 }
