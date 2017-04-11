@@ -109,10 +109,6 @@ func TestCreateUser(t *testing.T) {
 	if wins != 0 {
 		t.Errorf("Expected request JSON response to have wins 0")
 	}
-	id := reqJSON.Get("id").MustInt()
-	if id != 0 {
-		t.Errorf("Expected request JSON response to have id 0 got %v", id)
-	}
 
 	db := r.DB("test")
 	cursor, err := db.Table(TableName).Count().Run(session)
@@ -172,10 +168,6 @@ func TestGetUser(t *testing.T) {
 	wins := reqJSON.Get("wins").MustInt()
 	if wins != 0 {
 		t.Errorf("Expected request JSON response to have wins 0")
-	}
-	id := reqJSON.Get("id").MustInt()
-	if id != 0 {
-		t.Errorf("Expected request JSON response to have id 0 got %v", id)
 	}
 
 	dropDatabase("test")

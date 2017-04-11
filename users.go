@@ -99,7 +99,7 @@ func GetUser(w http.ResponseWriter, req *http.Request) {
 	}
 	db := r.DB(DbName)
 
-	res, err := db.Table(TableName).Filter(r.Row.Field("username").Eq(username)).Run(session)
+	res, err := db.Table(TableName).Filter(r.Row.Field("username").Eq(username)).Without("id").Distinct().Run(session)
 	if err != nil {
 		log.Fatalln(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
