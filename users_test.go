@@ -37,7 +37,6 @@ func TestCreateUser(t *testing.T) {
 	}
 
 	// Check the response body is what we expect.
-	// expected := `{"username":"Saitama","wins":0}`
 	reqJSON, err := simplejson.NewFromReader(rr.Body)
 	if err != nil {
 		t.Errorf("Error while reading request JSON: %s", err)
@@ -50,8 +49,6 @@ func TestCreateUser(t *testing.T) {
 	if wins != 0 {
 		t.Errorf("Expected request JSON response to have wins 0")
 	}
-	// if rr.Body.String() != expected {
-	//  t.Errorf("CreateUser handler returned unexpected body: got %v want %v",
-	//      rr.Body.String(), expected)
-	// }
+
+	// lookup user in rethinkdb and make sure it now exists
 }

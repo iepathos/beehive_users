@@ -23,6 +23,27 @@ type User struct {
 	Wins     int    `json:"wins"`
 }
 
+// db calls
+func InsertUser(user User) {
+	// connect to db
+	session, err := r.Connect(r.ConnectOpts{
+		Address: "localhost:28015",
+	})
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	db := r.DB(DbName)
+
+	// insert user db
+	err = db.Table(TableName).Insert(map[string]interface{}{
+		"username": user.Username,
+		"wins":     0,
+	}).Exec(session)
+	if err != nil {
+		log.Println(err.Error())
+	}
+}
+
 // user views
 
 // create a new user
@@ -42,23 +63,7 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 		log.Println(err.Error())
 	}
 
-	// connect to db
-	session, err := r.Connect(r.ConnectOpts{
-		Address: "localhost:28015",
-	})
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	db := r.DB(DbName)
-
-	// insert user db
-	err = db.Table(TableName).Insert(map[string]interface{}{
-		"username": user.Username,
-		"wins":     0,
-	}).Exec(session)
-	if err != nil {
-		log.Println(err.Error())
-	}
+	InsertUser(user)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -68,7 +73,9 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 // list
+
 // get
+
 // login
 // logout
 
